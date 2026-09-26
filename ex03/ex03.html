@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            display: grid;
+            place-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        h2 { text-align: center; color: #333; }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input { border: 1px solid #ccc; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+    <script>
+        function validateForm() {
+            let f = document.forms["regForm"];
+            
+            if (f["name"].value.trim() === "") {
+                alert("Name should not be empty.");
+                return false;
+            }
+            if (!/^[^ ]+@[^ ]+\.[a-z]{2,3}$/.test(f["email"].value)) {
+                alert("Email should be in correct format (@ and . present).");
+                return false;
+            }
+            if (!/^[0-9]{10}$/.test(f["phone"].value)) {
+                alert("Phone number should be numeric and 10 digits.");
+                return false;
+            }
+            if (f["password"].value.length < 6) {
+                alert("Password should be at least 6 characters long.");
+                return false;
+            }
+            
+            alert("Registration Successful!");
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Registration Form</h2>
+        <form name="regForm" onsubmit="return validateForm()">
+            <input type="text" name="name" placeholder="Enter your name">
+            <input type="email" name="email" placeholder="Enter your email">
+            <input type="text" name="phone" placeholder="Enter phone number">
+            <input type="password" name="password" placeholder="Enter password">
+            <button type="submit">Register</button>
+        </form>
+    </div>
+</body>
+</html>

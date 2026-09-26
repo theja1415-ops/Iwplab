@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="products.xsl"?>
+<products>
+    <product>
+        <id>101</id>
+        <name>Laptop</name>
+        <price>55000</price>
+        <quantity>10</quantity>
+    </product>
+    <product>
+        <id>102</id>
+        <name>Smartphone</name>
+        <price>25000</price>
+        <quantity>30</quantity>
+    </product>
+    <product>
+        <id>103</id>
+        <name>Headphones</name>
+        <price>2000</price>
+        <quantity>50</quantity>
+    </product>
+</products>

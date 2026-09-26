@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Real-time MongoDB Chart</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, Arial, sans-serif;
+            margin: 0;
+            padding: 30px 20px;
+            background: #f5f5f5;
+        }
+
+        .wrap {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        input,
+        button {
+            padding: 9px 12px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 220px;
+        }
+
+        button {
+            cursor: pointer;
+            border: 1px solid #999;
+            border-radius: 4px;
+            background: #f0f0f0;
+        }
+
+        button:hover {
+            background: #e0e0e0;
+        }
+
+        #status {
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 420px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wrap">
+
+        <h2>Real-time Sensor Readings (MongoDB → SSE → Chart.js)</h2>
+
+        <div class="toolbar">
+
+            <input
+                id="val"
+                type="number"
+                step="0.1"
+                placeholder="Enter value e.g. 25.6"
+            />
+
+            <button id="send">
+                Insert Reading
+            </button>
+
+            <span id="status">
+                Connecting...
+            </span>
+
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart"></canvas>
+        </div>
+
+    </div>
+
+
+    <script>
+        // Chart Setup
+        const ctx = document.getElementById("chart");
+        const labels = [];
+        const data = {
+            labels: labels,
+
+            datasets: [
+                {
+                    label: "Sensor Value",
+                    data: [],
+                    tension: 0.3
+                }
+            ]
+        };
+
+        const chart = new Chart(ctx, {
+            type: "line",
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 0,
+                            autoSkip: true
+                        }
+                    },
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+
+        // SSE Connection
+        const status = document.getElementById("status");
+        const es = new EventSource("stream/readings");
+
+        // Connection opened
+        es.onopen = function () {
+
+            status.textContent = "Live connected";
+
+        };
+
+        // Connection error
+        es.onerror = function () {
+
+            status.textContent = "Disconnected (retrying...)";
+
+        };
+
+        // Receive sensor data
+        es.onmessage = function (event) {
+
+            try {
+                const reading = JSON.parse(event.data);
+
+                const timestamp = reading.timestamp;
+                const value = reading.value;
+
+                // Add time to X-axis
+                labels.push(
+                    new Date(timestamp).toLocaleTimeString()
+                );
+
+                // Add sensor value to Y-axis
+                data.datasets[0].data.push(value);
+
+                // Keep only the latest 50 readings
+                if (labels.length > 50) {
+                    labels.shift();
+                    data.datasets[0].data.shift();
+                }
+
+                // Refresh chart
+                chart.update();
+
+            }
+            catch (error) {
+                console.error(
+                    "Error parsing SSE data:",
+                    error
+                );
+            }
+        };
+
+        // Insert Reading
+        document.getElementById("send").onclick = async function () {
+            const input = document.getElementById("val");
+            const value = parseFloat(input.value);
+
+            // Validate input
+            if (isNaN(value)) {
+                alert("Please enter a numeric value.");
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    "api/readings?value=" +
+                    encodeURIComponent(value),
+                    {
+                        method: "POST"
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "HTTP error: " + response.status
+                    );
+                }
+
+                // Clear input
+                input.value = "";
+            }
+            catch (error) {
+                console.error(
+                    "Error inserting reading:",
+                    error
+                );
+                alert(
+                    "Failed to insert reading."
+                );
+            }
+        };
+    </script>
+</body>
+</html>
